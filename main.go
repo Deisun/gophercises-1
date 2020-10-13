@@ -24,14 +24,13 @@ func main() {
 
 	lines, err := csv.NewReader(file).ReadAll()
 	if err != nil {
-		log.Fatalf("Problem opening file, %s", err.Error())
+		log.Fatalf("Problem reading file, %s", err.Error())
 	}
 
 	var problems = make([]problem, 0)
 	for _, line := range lines {
 		problems = append(problems, problem{question: line[0], answer: line[1]})
 	}
-
 
 	score := 0
 	for i, problem := range problems {
@@ -47,4 +46,3 @@ func main() {
 
 	fmt.Printf("Total correct: %d out of %d\n", score, len(problems))
 }
-
