@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 )
 
 type problem struct {
@@ -14,7 +15,9 @@ type problem struct {
 
 func main() {
 
-	filename := flag.String("csv", "problems.csv", "CSV file")
+	filename := flag.String("csv", "problems.csv", "The CSV file")
+	timeLimit := flag.Int("limit", 30, "The time limit for the quiz")
+	flag.Parse()
 
 	file, err := os.Open(*filename)
 	if err != nil {
@@ -32,15 +35,28 @@ func main() {
 		problems = append(problems, problem{question: line[0], answer: line[1]})
 	}
 
+	timer := time.NewTimer(time.Duration(*timeLimit) * time.Second)
+	answerChan := make(chan string)
+
 	score := 0
 	for i, problem := range problems {
 		fmt.Printf("Problem %d: %s = ", i+1, problem.question)
 
-		var userAnswer string
-		fmt.Scan(&userAnswer)
+		go func() {
+			var userAnswer string
+			fmt.Scan(&userAnswer)
+			answerChan <- userAnswer
+		}()
 
-		if userAnswer == problem.answer {
-			score++
+		select {
+		case <-timer.C:
+			fmt.Println("\nTime up!")
+			fmt.Printf("Total correct: %d out of %d\n", score, len(problems))
+			return
+		case answer := <-answerChan:
+			if answer == problem.answer {
+				score++
+			}
 		}
 	}
 
